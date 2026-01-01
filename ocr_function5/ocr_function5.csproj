@@ -1,0 +1,82 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Platforms>AnyCPU;x64</Platforms>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>false</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SupportedOSPlatformVersion>6.1</SupportedOSPlatformVersion>
+    <!-- I will keep  my OWN .\properties\AssemblyInfo.cs   -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.AI.Vision.ImageAnalysis" Version="1.0.0" />
+  </ItemGroup>
+  <!-- ========================================================= -->
+  <!--  CUSTOM! PRE-POST-BUILD BANNER                                                                            -->
+  <!-- ========================================================= -->
+  <!-- Runs for build/rebuild/publish -->
+  <Target Name="CaptureBuildStartTime" BeforeTargets="Build;Rebuild;Publish">
+    <PropertyGroup>
+      <!-- Use ISO 8601 so Parse is reliable -->
+      <BuildStartTime>$([System.DateTime]::UtcNow.ToString("o"))</BuildStartTime>
+    </PropertyGroup>
+  </Target>
+  <!-- ========================================================= -->
+  <!--  PRE-BUILD BANNER -->
+  <!-- ========================================================= -->
+  <Target Name="PreBuildBanner" BeforeTargets="Build;Rebuild;Publish">
+    <PropertyGroup>
+      <!-- Azure Environment Variables -->
+      <AzureSubscription>$([System.Environment]::GetEnvironmentVariable('AZURE_SUBSCRIPTION_ID'))</AzureSubscription>
+      <AzureTenant>$([System.Environment]::GetEnvironmentVariable('AZURE_TENANT_ID'))</AzureTenant>
+      <AzureClientId>$([System.Environment]::GetEnvironmentVariable('AZURE_CLIENT_ID'))</AzureClientId>
+    </PropertyGroup>
+    <Message Text="============================================" Importance="High" />
+    <Message Text="*** Pre-Build Environment Summary" Importance="High" />
+    <Message Text="Start: $(BuildStartTime)" Importance="High" />
+    <Message Text="--------------------------------------------" Importance="High" />
+    <Message Text="** C# Language Version: $(LangVersion)" Importance="High" />
+    <Message Text="** Compiler: $(CscToolExe) $(CscToolPath)" Importance="High" />
+    <Message Text="** MSBuild Tools Version: $(MSBuildToolsVersion)" Importance="High" />
+    <Message Text="** Target Framework: $(TargetFramework)" Importance="High" />
+    <Message Text="** Configuration: $(Configuration)" Importance="High" />
+    <Message Text="** Platform: $(Platform)" Importance="High" />
+    <Message Text="** Azure Subscription: $(AzureSubscription)" Importance="High" />
+    <Message Text="** Azure Tenant: $(AzureTenant)" Importance="High" />
+    <Message Text="** Azure Client ID: $(AzureClientId)" Importance="High" />
+    <Message Text="============================================" Importance="High" />
+  </Target>
+  <!-- ========================================================= -->
+  <!--  POST-BUILD BANNER   -->
+  <!-- ========================================================= -->
+  <Target Name="PostBuildBanner" AfterTargets="Build;Rebuild;Publish">
+    <!-- endtime and duration calculation -->
+    <PropertyGroup>
+      <BuildEndTime>$([System.DateTime]::UtcNow.ToString("o"))</BuildEndTime>
+      <!-- Only compute if start time exists -->
+      <!-- IMPORTANT:
+     MSBuild property functions MUST be on a single line.
+     Do NOT add whitespace or line breaks inside BuildDurationSeconds,
+     or the value will include newlines and break logging.
+    -->
+      <BuildDurationSeconds Condition="'$(BuildStartTime)' != ''">$([System.Math]::Round($([System.DateTime]::Parse('$(BuildEndTime)').Subtract($([System.DateTime]::Parse('$(BuildStartTime)'))).TotalSeconds), 3))</BuildDurationSeconds>
+      <BuildDurationSeconds Condition="'$(BuildStartTime)' == ''">0</BuildDurationSeconds>
+    </PropertyGroup>
+    <Message Text="============================================" Importance="High" />
+    <Message Text="*** Build Completed Successfully" Importance="High" />
+    <Message Text="--------------------------------------------" Importance="High" />
+    <Message Text="Start: $(BuildStartTime)" Importance="High" />
+    <Message Text="End:   $(BuildEndTime)" Importance="High" />
+    <Message Text="Build Duration: $(BuildDurationSeconds) seconds" Importance="High" />
+    <Message Text="Output Path: $(OutputPath)" Importance="High" />
+    <Message Text="Assembly: $(AssemblyName).dll / .exe" Importance="High" />
+    <Message Text="** Target Framework: $(TargetFramework)" Importance="High" />
+    <Message Text="Warning level: $(WarningLevel)" Importance="High" />
+    <!-- MSBuild Reserved Properties https://learn.microsoft.com/en-us/previous-versions/dotnet/netframework-4.0/ms164309(v=vs.100)?redirectedfrom=MSDN -->
+    <Message Text="Last Task status: $(MSBuildLastTaskResult)" Importance="High" />
+    <Message Text="============================================" Importance="High" />
+  </Target>
+</Project>
